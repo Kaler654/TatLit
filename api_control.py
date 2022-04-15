@@ -1,19 +1,17 @@
 import aiohttp
 import asyncio
 
-_url = ''
 
-def setApiHost(host):
-    global _url
-    host = host if host.startswith('http://') else 'http://' + host
-    _url = host
+URL = "http://localhost:8080" 
 
-def prepare_url(api_path):
-    result = _url
-    result += api_path
-    return result
 
-setApiHost('http://127.0.0.1:8080/')
+def prepare_url(path):
+    dest = URL + path
+    if dest.count('//') > 1:
+        raise("Invalid URL")
+    dest = dest[:-1] if dest.endswith('/') else dest
+    return dest
+
 
 async def getUsers():
     async with aiohttp.ClientSession() as session:
@@ -24,6 +22,7 @@ async def getUsers():
             response = await response.json()
     return response
 
+
 async def getUser(user_id):
     async with aiohttp.ClientSession() as session:
         url = prepare_url('api/users/' + str(user_id))
@@ -33,7 +32,8 @@ async def getUser(user_id):
             response = await response.json()
     return response
 
-async def createUser(name, password, email, **args):
+
+async def createUser(name, email, **args):
     params = {'name': name, 'password': password, 'email': email}
     for key in args.keys():
         params[key] = args[key]
@@ -45,6 +45,7 @@ async def createUser(name, password, email, **args):
             response = await response.json()
     return response
 
+
 async def deleteUser(user_id):
     async with aiohttp.ClientSession() as session:
         url = prepare_url('api/users/' + str(user_id))
@@ -54,7 +55,8 @@ async def deleteUser(user_id):
             response = await response.json()
     return response
 
-async def changeUser(user_id, name, password, email, **args):
+
+async def changeUser(user_id, name, email, **args):
     params = {'name': name, 'password': password, 'email': email}
     for key in args.keys():
         params[key] = args[key]
