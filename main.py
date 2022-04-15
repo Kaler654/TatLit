@@ -1,5 +1,5 @@
 from flask import Flask, render_template, redirect, request, make_response, jsonify
-from data import db_session, books_api, users_api
+from data import db_session, books_api, users_api, words_api
 from data.users import User
 from forms.login import LoginForm
 from forms.register import RegisterForm
@@ -77,6 +77,7 @@ def main():
     db_session.global_init("db/database.db")
     app.register_blueprint(books_api.blueprint)
     app.register_blueprint(users_api.blueprint)
+    app.register_blueprint(words_api.blueprint)
     app.run(port=8080, host='127.0.0.1')
 
 
