@@ -182,6 +182,15 @@ async def getWordLevel2(user_id, word_id):
     return {'error': 'Not found'}
 
 
+async def getUser2(telegram_id):
+    response = getUsers()
+    for key in response.key():
+        way = response[key]
+        if way['telegram_id'] == telegram_id:
+            return {key: way}
+    return {'error': 'Not Found'}
+
+
 if __name__ == '__main__':
     loop = asyncio.get_event_loop()
     print(loop.run_until_complete(getWords()))
