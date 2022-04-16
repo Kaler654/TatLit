@@ -72,7 +72,7 @@ def edit_user(user_id):
     if not request.json:
         return jsonify({'error': 'Empty request'})
     elif not all(key in request.json for key in
-                 ['name', 'email', 'password']):
+                 ['name', 'email']):
         return jsonify({'error': 'Bad put request'})
 
     db_sess = db_session.create_session()

@@ -1,7 +1,8 @@
-from flask import Flask, render_template, redirect, request, make_response, jsonify, url_for
-from data import db_session, books_api, users_api
+from flask import Flask, render_template, redirect, request, make_response, jsonify
+from data import db_session, books_api, users_api, words_api
 from data.users import User
 from data.questions import Question
+from data.words import Word
 from forms.login import LoginForm
 from forms.register import RegisterForm
 from forms.quiz import QuizForm
@@ -11,6 +12,9 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
 login_manager = LoginManager()
 login_manager.init_app(app)
+user_progress = {}
+max_question_id = 1
+quiz_analyze_session = None
 
 
 @login_manager.user_loader
@@ -81,29 +85,62 @@ def reqister():
     return render_template('register.html', title='Регистрация', form=form)
 
 
-@app.route('/quiz_form/<question_number>', methods=['GET', 'POST'])
-def quiz_form(question_number):
-    session = db_session.create_session()
-    quest = session.query(Question).filter(Question.id == question_number).first()
-
-    form = QuizForm(quest)
-    if form.validate_on_submit():
+@app.route('/quiz_form', methods=['GET', 'POST'])
+def quiz_form():
+    if request.method == 'GET':
         try:
-            return redirect(f'quiz_form/{question_number + 1}')
-        except Exception as error:
-            return redirect(f'quiz_form/result')
-    return render_template('quiz.html', form=form)
+            if user_progress[current_user.id]["question_number"] == max_question_id + 1:
+                user_progress[current_user.id] = {'id': current_user.id, 'question_number': 1, 'count': 0}
+        except:
+            user_progress[current_user.id] = {'id': current_user.id, 'question_number': 1, 'count': 0}
+        question_number = user_progress[current_user.id]["question_number"]
+        quest = quiz_analyze_session.query(Question).filter(Question.id == question_number).first()
+        answers_ = [int(i) for i in str(quest.answers).split(',')]
+        answers_objects = []
+        for i in quiz_analyze_session.query(Word):
+            if i.id in answers_:
+                answers_objects.append(i.word)
+        current_answer = quiz_analyze_session.query(Word).filter(Word.id == quest.correct_answer).first().word
+        form = QuizForm(quest.question, answers_objects, current_answer)
+        params = {
+            'question': form.question,
+            'answers': form.answers_list,
+            'current_answer': user_progress[current_user.id]["question_number"]
+        }
+        return render_template('quiz.html', **params)
+    elif request.method == 'POST':
+        print(request.form, user_progress[current_user.id]["question_number"], max_question_id, len(request.form))
+        print(user_progress[current_user.id]["question_number"] == max_question_id)
+        if request.form is not None:
+            if len(request.form) > 1:
+                user_progress[current_user.id]["question_number"] += 1
+                user_progress[current_user.id]["count"] += int(request.form["options"])
+        if user_progress[current_user.id]["question_number"] == max_question_id + 1:
+            return redirect('/quiz_result')
+        return redirect('/quiz_form')
 
 
-@app.route('quiz_form/result')
-def quiz_rezult():
-    pass
+@app.route('/quiz_result')
+def quiz_result():
+    params = {
+        'count': user_progress[current_user.id]["count"],
+        'level': user_progress[current_user.id]["question_number"] - 1
+    }
+    return render_template('quiz_rezult.html', **params)
+
+
+def set_max_question_id():
+    global max_question_id, quiz_analyze_session
+    quiz_analyze_session = db_session.create_session()
+    max_question_id = quiz_analyze_session.query(Question).order_by(Question.id.desc()).first().id
 
 
 def main():
     db_session.global_init("db/database.db")
+    set_max_question_id()
     app.register_blueprint(books_api.blueprint)
     app.register_blueprint(users_api.blueprint)
+    app.register_blueprint(words_api.blueprint)
     app.run(port=8080, host='127.0.0.1')
 
 
