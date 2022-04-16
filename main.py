@@ -46,10 +46,13 @@ def training_dict():
                                                                    Word_level.user_id == current_user.id).first()
         date = word_level.date
         stage = word_level.word_level
+        if stage == 8:
+            quiz_analyze_session.delete(userwordlist[word], word_level)
+            quiz_analyze_session.commit()
         last_time = datetime.datetime.fromisoformat(str(date))  # ДД-ММ-ГГ
         limit_timedelta = datetime.timedelta(days=table_stage2time[stage])
-        #word_level.word_level += 1
-        #quiz_analyze_session.commit()
+        word_level.word_level += 1
+        quiz_analyze_session.commit()
         if (now_time - last_time) > limit_timedelta:
             final_dict.append([userwordlist[word].word])
             final_dict[word].append(userwordlist[word].word_ru)
