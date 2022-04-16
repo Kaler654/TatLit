@@ -9,5 +9,9 @@ class Word_level(SqlAlchemyBase, SerializerMixin):
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
     word_id = sqlalchemy.Column(sqlalchemy.Integer)
     user_id = sqlalchemy.Column(sqlalchemy.Integer)
+<<<<<<< HEAD
     word_level = sqlalchemy.Column(sqlalchemy.Integer, nullable=False)
+=======
+    word_level = sqlalchemy.Column(sqlalchemy.VARCHAR, nullable=False)
+>>>>>>> EPUB
     date = sqlalchemy.Column(sqlalchemy.DateTime, default=datetime.datetime.now)

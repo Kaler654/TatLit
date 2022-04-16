@@ -1,9 +1,14 @@
 from flask import Flask, render_template, redirect, request, make_response, jsonify
+<<<<<<< HEAD
 import datetime
 from random import shuffle, choice
 from data import db_session, books_api, users_api, words_api, levels_api, word_levels_api
 from data.users import User
 from data.questions import Question
+=======
+from data import db_session, books_api, users_api, words_api, levels_api, word_levels_api
+from data.users import User
+>>>>>>> EPUB
 from data.words import Word
 from data.word_levels import Word_level
 from data.levels import Level
@@ -12,17 +17,26 @@ from data.books import Book
 from forms.login import LoginForm
 from forms.register import RegisterForm
 <<<<<<< HEAD
+<<<<<<< HEAD
 from forms.add_text import TextForm
 from flask_login import LoginManager, current_user, login_user, login_required, logout_user
 =======
 from forms.quiz import QuizForm
 from flask_login import LoginManager, current_user, login_user, login_required, logout_user, mixins
 >>>>>>> dd927b78d63a9a451821744cf7b01780c6267abd
+=======
+from flask_login import LoginManager, current_user, login_user, login_required, logout_user
+from html_from_epub import convert
+from bs4 import BeautifulSoup
+import os
+import shutil
+>>>>>>> EPUB
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
 login_manager = LoginManager()
 login_manager.init_app(app)
+<<<<<<< HEAD
 user_progress = {}
 max_question_id = 1
 quiz_analyze_session = None
@@ -78,35 +92,55 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1] in ['epub']
 
+=======
+
+
+>>>>>>> EPUB
 @login_manager.user_loader
 def load_user(user_id):
     db_sess = db_session.create_session()
     return db_sess.query(User).get(user_id)
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> EPUB
 @app.route("/logout")
 def logout():
     logout_user()
     return redirect("/")
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> EPUB
 @app.route('/', methods=['GET', 'POST'])
 def index():
     return render_template('index.html', title='index')
 
+<<<<<<< HEAD
 @app.errorhandler(401)
 
 @app.errorhandler(404)
 def not_found(error):
     return redirect('/register')
 
+=======
+@app.errorhandler(404)
+def not_found(error):
+    print(error)
+    return render_template("404.html", title='404')
+>>>>>>> EPUB
 
 @app.errorhandler(404)
 def not_found(error):
     print(error)
     return make_response(jsonify({'error': 'Not found'}), 404)
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> EPUB
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
@@ -121,7 +155,10 @@ def login():
                                form=form)
     return render_template('login.html', title='Авторизация', form=form)
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> EPUB
 @app.route('/register', methods=['GET', 'POST'])
 def reqister():
     form = RegisterForm()
@@ -145,6 +182,7 @@ def reqister():
         return redirect('/login')
     return render_template('register.html', title='Регистрация', form=form)
 
+<<<<<<< HEAD
 
 @app.route('/training/<int:num>', methods=['GET', 'POST'])
 @login_required
@@ -335,11 +373,32 @@ def set_max_question_id():
     global max_question_id, quiz_analyze_session
     quiz_analyze_session = db_session.create_session()
     max_question_id = quiz_analyze_session.query(Question).order_by(Question.id.desc()).first().id
+=======
+@app.route('/book_view/<int:book_id>/<int:page>', methods=['GET', 'POST'])
+def book_view(book_id, page):
+    db_sess = db_session.create_session()
+    book = db_sess.query(Book).get(book_id)
+    pages = book.pages
+    if book and 1 <= page <= pages:
+        # print(f'books/{book_id}/{book_id}.epub')
+        # convert(f'books/{book_id}/{book_id}.epub')
+        # shutil.move(f"{book_id}/", f"books/{book_id}/")
+        html = open(f"books/{book_id}/{book_id}/content{page - 1}.html", 'r', encoding="utf-8").read()
+        soup = BeautifulSoup(html, 'html.parser')
+
+        text = soup.get_text().split("\n")
+        text = [x.split() for x in text if x]
+        return render_template('book_view.html', text=text, page=page, pages=pages)
+    return render_template('404.html')
+>>>>>>> EPUB
 
 
 def main():
     db_session.global_init("db/database.db")
+<<<<<<< HEAD
     set_max_question_id()
+=======
+>>>>>>> EPUB
     app.register_blueprint(books_api.blueprint)
     app.register_blueprint(users_api.blueprint)
     app.register_blueprint(words_api.blueprint)
@@ -349,4 +408,8 @@ def main():
 
 
 if __name__ == '__main__':
+<<<<<<< HEAD
     main()
+=======
+    main()
+>>>>>>> EPUB
