@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify, make_response, request
 from . import db_session
 from .words import Word
 from .users import User
+from .word_levels import Word_level
 
 blueprint = Blueprint(
     'words_api',
@@ -13,13 +14,18 @@ blueprint = Blueprint(
 @blueprint.route('/api/words/<int:user_id>', methods=["GET"])
 def get_user_words(user_id):
     db_sess = db_session.create_session()
-    user_words_id = db_sess.query(User.words).filter(User.id == user_id).first()
-    print(user_words_id[0])
-    words = db_sess.query(Word).filter(Word.id.in_(list(map(int, user_words_id[0].split(','))))).all()
-    print(words)
-    return jsonify(
-        {item.id: item.to_dict(only=('word', 'word_ru')) for item in words}
-    )
+    user_words_id = db_sess.query(User.words).filter(User.id == user_id).first()[0].split(',')
+    words = db_sess.query(Word).filter(Word.id.in_(list(map(int, user_words_id)))).all()
+    levels = db_sess.query(Word_level).filter(Word_level.user_id == user_id, Word_level.word_id.in_(user_words_id)).all()
+    data = {}
+    for i in words:
+        i = i.to_dict()
+        data[i['id']] = {'word': i['word'], 'word_ru': i['word_ru']}
+    for i in levels:
+        i = i.to_dict()
+        data[i['id']]['word_level'] = i['word_level']
+        data[i['id']]['date'] = i['date']
+    return jsonify(data)
 
 
 @blueprint.route('/api/words', methods=["GET"])

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Quiz Answer({{current_answer}})</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" rel="stylesheet" media="screen">
+  </head>
+  <style type="text/css">
+    .container {
+      max-width: 500px;
+    }
+  </style>
+  <body>
+    <div class="container">
+<form action="" method="post" novalidate role="form">
+    <div class="question">{{question}}</div>
+        {% for answer in answers %}
+              <input class="answer" type="radio" name="options" id="option{{ loop.index }}" value={{answer[1]}}> {{answer[0]}} <br>
+        {% endfor %}
+        <input type="submit" value="Далее" name="next"/>
+      </form>
+</div>
+    <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+    <script src="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+  </body>
+</html>

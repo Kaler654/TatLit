@@ -17,8 +17,10 @@ class User(SqlAlchemyBase, UserMixin, SerializerMixin):
     hashed_password = sqlalchemy.Column(sqlalchemy.VARCHAR, nullable=False, unique=False)
     created_date = sqlalchemy.Column(sqlalchemy.DateTime, default=datetime.datetime.now)
     status = sqlalchemy.Column(sqlalchemy.VARCHAR, default='user')
-    level_id = sqlalchemy.Column(sqlalchemy.Integer, default=None)
+    level_id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey("levels.level_id"))
     words = sqlalchemy.Column(sqlalchemy.VARCHAR, nullable=True)
+
+    level = orm.relation("Level")
 
     def set_password(self, password):
         self.hashed_password = generate_password_hash(password)

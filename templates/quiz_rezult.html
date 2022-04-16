@@ -1,9 +1,8 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <title>Quiz Result</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" rel="stylesheet" media="screen">
-  </head>
-<h1>Вы правильно ответили на {{count}} вопросов из {{level}}</h1>
-</html>
+{% extends "base.html" %} {% block content %}
+
+<div>
+    <h1>Вы правильно ответили на {{count}} вопросов из {{level}}</h1>
+    <h2>{{show_message}}</h2>
+</div>
+
+{% endblock %}
