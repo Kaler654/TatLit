@@ -1,4 +1,6 @@
 from flask import Flask, render_template, redirect, request, make_response, jsonify
+import datetime
+from random import shuffle, choice
 from data import db_session, books_api, users_api, words_api, levels_api, word_levels_api
 from data.users import User
 from data.questions import Question
@@ -19,6 +21,49 @@ login_manager.init_app(app)
 user_progress = {}
 max_question_id = 1
 quiz_analyze_session = None
+table_stage2time = {
+    0: 0,
+    1: 1,
+    2: 3,
+    4: 6,
+    5: 13,
+    6: 28,
+    7: 58,
+    8: 118
+}
+
+
+def training_dict():
+    now_time = datetime.datetime.now()
+    final_dict = []
+    wordlist = list(quiz_analyze_session.query(Word).all())
+    userwordlist = list(quiz_analyze_session.query(Word).filter(Word.id.in_([int(i)
+                                                                             for i in current_user.words.split(',')])).all())
+    shuffle(wordlist)
+    shuffle(userwordlist)
+    for word in range(len(userwordlist)):
+        word_level = quiz_analyze_session.query(Word_level).filter(Word_level.word_id == userwordlist[word].id,
+                                                                   Word_level.user_id == current_user.id).first()
+        date = word_level.date
+        stage = word_level.word_level
+        last_time = datetime.datetime.fromisoformat(str(date))  # ДД-ММ-ГГ
+        limit_timedelta = datetime.timedelta(days=table_stage2time[stage])
+        #word_level.word_level += 1
+        #quiz_analyze_session.commit()
+        if (now_time - last_time) > limit_timedelta:
+            final_dict.append([userwordlist[word].word])
+            final_dict[word].append(userwordlist[word].word_ru)
+            final_dict[word].append([userwordlist[word].word_ru])
+            while len(final_dict[word][2]) < 4:
+                ch = choice(wordlist)
+                try_list = [i[0] for i in final_dict[word][2]]
+                if ch.word not in try_list:
+                    final_dict[word][2].append(ch.word_ru)
+            shuffle(final_dict[word][2])
+            for i in range(len(final_dict[word][2])):
+                ind = 1 if final_dict[word][2][i] == final_dict[word][1] else 0
+                final_dict[word][2][i] = (final_dict[word][2][i], ind)
+    return final_dict
 
 
 @login_manager.user_loader
@@ -136,11 +181,9 @@ def quiz_result():
     params = {
         'count': count,
         'level': level_name,
-        'show_message': '',
         'title': 'Quiz Result'
     }
     if user_progress[current_user.id]["showed"]:
-        params['show_message'] = "в прошлый раз"
         return render_template('quiz_rezult.html', **params)
     level_name = count / level_name
     if level_name < 0.3334:
@@ -149,12 +192,77 @@ def quiz_result():
         level_name = "Средний"
     else:
         level_name = "Профи"
+    params["level_name"] = level_name
     user = quiz_analyze_session.query(User).filter(User.id == current_user.id).first()
     id_ = quiz_analyze_session.query(Level).filter(Level.name == level_name).first().level_id
     user.level_id = id_
     quiz_analyze_session.commit()
     user_progress[current_user.id]["showed"] = True
     return render_template('quiz_rezult.html', **params)
+
+
+@app.route('/training_form', methods=['GET', 'POST'])
+def training_form():
+    if request.method == 'GET' and not isinstance(current_user, mixins.AnonymousUserMixin):
+        try:
+            if user_progress[current_user.id]["question_training_number"] == user_progress[current_user.id]['train_len']:
+                user_progress[current_user.id] = {'id': current_user.id, 'question_training_number': 0,
+                                                  'count_training': 0, 'showed': False,
+                                                  'training_program': training_dict()}
+                user_progress[current_user.id]['train_len'] = len(user_progress[current_user.id]['training_program'])
+        except:
+            user_progress[current_user.id] = {'id': current_user.id, 'question_training_number': 0,
+                                              'count_training': 0, 'showed': False, 'training_program': training_dict()}
+            user_progress[current_user.id]['train_len'] = len(user_progress[current_user.id]['training_program'])
+        num = user_progress[current_user.id]['question_training_number']
+        train = user_progress[current_user.id]['training_program']
+        params = {
+            'question': train[num][0],
+            'answers': train[num][2],
+            'current_answer': train[num][1],
+            'title': 'Training' + train[num][0]
+        }
+        return render_template('quiz.html', **params)
+    elif request.method == 'POST' and type(current_user) != "AnonymousUserMixin":
+        if request.form is not None:
+            if len(request.form) > 1:
+                user_progress[current_user.id]["question_training_number"] += 1
+                user_progress[current_user.id]["count_training"] += int(request.form["options"])
+        if user_progress[current_user.id]['question_training_number'] == user_progress[current_user.id]['train_len']:
+            return redirect('/training_result')
+        return redirect('/training_form')
+    else:
+        return redirect('/register')
+
+
+@app.route('/training_result')
+def training_result():
+    try:
+        count = user_progress[current_user.id]["count_training"]
+        level = user_progress[current_user.id]["question_training_number"]
+    except:
+        return redirect('/training_form')
+    params = {
+        'count': count,
+        'level': level,
+        'title': 'Training Result'
+    }
+    if user_progress[current_user.id]["showed"]:
+        return render_template('training_rezult.html', **params)
+    level_name = count / level
+    if level_name < 0.3334:
+        level_name = "Новичок"
+    elif level_name < 0.6667:
+        level_name = "Средний"
+    else:
+        level_name = "Профи"
+    params["level_name"] = level_name
+    user = quiz_analyze_session.query(User).filter(User.id == current_user.id).first()
+    id_ = quiz_analyze_session.query(Level).filter(Level.name == level_name).first().level_id
+    user.level_id = id_
+    quiz_analyze_session.commit()
+    user_progress[current_user.id]["showed"] = True
+    return render_template('training_rezult.html', **params)
 
 
 def set_max_question_id():
