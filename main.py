@@ -122,10 +122,12 @@ def quiz_form():
 
 @app.route('/quiz_result')
 def quiz_result():
+    count = user_progress[current_user.id]["count"]
     params = {
-        'count': user_progress[current_user.id]["count"],
+        'count': count,
         'level': user_progress[current_user.id]["question_number"] - 1
     }
+    if
     return render_template('quiz_rezult.html', **params)
 
 
