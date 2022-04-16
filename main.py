@@ -94,12 +94,9 @@ def logout():
 def index():
     return render_template('index.html', title='index')
 
-<<<<<<< HEAD
 @app.errorhandler(401)
-=======
 
 @app.errorhandler(404)
->>>>>>> dd927b78d63a9a451821744cf7b01780c6267abd
 def not_found(error):
     return redirect('/register')
 
@@ -149,7 +146,6 @@ def reqister():
     return render_template('register.html', title='Регистрация', form=form)
 
 
-<<<<<<< HEAD
 @app.route('/training/<int:num>', methods=['GET', 'POST'])
 @login_required
 def training(num):
@@ -204,7 +200,6 @@ def add_text():
                                message="не все поля заполнены",
                                form=form)
     return render_template('add_text.html', title='добавление текста', form=form)
-=======
 @app.route('/quiz_form', methods=['GET', 'POST'])
 def quiz_form():
     if request.method == 'GET' and not isinstance(current_user, mixins.AnonymousUserMixin):
@@ -340,7 +335,6 @@ def set_max_question_id():
     global max_question_id, quiz_analyze_session
     quiz_analyze_session = db_session.create_session()
     max_question_id = quiz_analyze_session.query(Question).order_by(Question.id.desc()).first().id
->>>>>>> dd927b78d63a9a451821744cf7b01780c6267abd
 
 
 def main():
