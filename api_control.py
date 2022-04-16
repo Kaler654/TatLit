@@ -1,5 +1,6 @@
 import aiohttp
 import asyncio
+import datetime
 
 
 URL = "http://localhost:8080" 
@@ -33,8 +34,8 @@ async def getUser(user_id):
     return response
 
 
-async def createUser(name, email, **args):
-    params = {'name': name, 'email': email}
+async def createUser(name, email, password, **args):
+    params = {'name': name, 'email': email, 'password': password}
     for key in args.keys():
         params[key] = args[key]
     async with aiohttp.ClientSession() as session:
@@ -110,8 +111,10 @@ async def deleteWord(word_id):
     return response
 
 
-async def changeWord(word_id, word, translation):
+async def changeWord(word_id, word, translation, **args):
     params = {'word': word, 'word_ru': translation}
+    for key in args:
+        params[key] = args[key]
     async with aiohttp.ClientSession() as session:
         url = prepare_url('api/words/' + str(word_id))
         async with session.put(url, json=params) as response:
@@ -121,8 +124,10 @@ async def changeWord(word_id, word, translation):
     return response
 
 
-async def changeWordLevel(user_id, word_id, word_level, date):
-    params = {'user_id': user_id, 'word_id': word_id, 'word_level': word_level, 'date': date}
+async def changeWordLevel(user_id, word_id, word_level, **args):
+    params = {'user_id': user_id, 'word_id': word_id, 'word_level': word_level}
+    for key in args:
+        params[key] = args[key]
     async with aiohttp.ClientSession() as session:
         url = prepare_url('api/word_levels/' + str(user_id) + '/' + str(word_id))
         async with session.put(url, json=params) as response:
@@ -152,11 +157,11 @@ async def getWordLevel(word_level_id):
     return response
 
 
-async def createWordLevel(user_id, word_id, word_level_id, date=None):
-    params = {'user_id': user_id, 'word_id': word_id, 'word_level_id': word_level_id, 'date': date}
+async def createWordLevel(user_id, word_id, word_level, date=None):
+    params = {'user_id': user_id, 'word_id': word_id, 'word_level': word_level, 'date': date}
     async with aiohttp.ClientSession() as session:
         url = prepare_url('api/word_levels')
-        async with session.post(url, params=params) as response:
+        async with session.post(url, json=params) as response:
             if response.status != 200:
                 raise ValueError("STATUS CODE: {}".format(response.status))
             response = await response.json()
@@ -191,7 +196,13 @@ async def getUser2(telegram_id):
     return {'error': 'Not Found'}
 
 
+async def appendWord(user_id, word_id):
+    infoUser = (await getUser(user_id))[str(user_id)]
+    words = infoUser['words'] + ',' + str(word_id) if infoUser['words'] is not None else str(word_id)
+    await createWordLevel(user_id, word_id, 1)
+    await changeUser(user_id, infoUser['name'], infoUser['email'], words=words)
+
+
 if __name__ == '__main__':
     loop = asyncio.get_event_loop()
-    print(loop.run_until_complete(getWords()))
-            
+    print(loop.run_until_complete(appendWord(1, 4)))
