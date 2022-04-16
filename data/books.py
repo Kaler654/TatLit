@@ -14,3 +14,8 @@ class Book(SqlAlchemyBase, SerializerMixin):
     level_id = sqlalchemy.Column(sqlalchemy.Integer, nullable=False)
 
     user = orm.relation('User')
+
+    def __str__(self):
+        return "id {}, au {}, us_id {}, pg {}, ti {}, lv {}".format(
+            self.id, self.author, self.user_author_id, self.pages, self.title, self.level_id
+        )

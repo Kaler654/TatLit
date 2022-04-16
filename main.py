@@ -8,6 +8,7 @@ from data.questions import Question
 from data.books import Book
 from forms.login import LoginForm
 from forms.register import RegisterForm
+from forms.add_text import TextForm
 from flask_login import LoginManager, current_user, login_user, login_required, logout_user
 
 app = Flask(__name__)
@@ -15,6 +16,10 @@ app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
 login_manager = LoginManager()
 login_manager.init_app(app)
 
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1] in ['epub']
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -30,10 +35,9 @@ def logout():
 def index():
     return render_template('index.html', title='index')
 
-@app.errorhandler(404)
+@app.errorhandler(401)
 def not_found(error):
-    print(error)
-    return render_template("404.html", title='404')
+    return redirect('/register')
 
 @app.errorhandler(404)
 def not_found(error):
@@ -76,6 +80,62 @@ def reqister():
         db_sess.commit()
         return redirect('/login')
     return render_template('register.html', title='Регистрация', form=form)
+
+
+@app.route('/training/<int:num>', methods=['GET', 'POST'])
+@login_required
+def training(num):
+
+    return render_template('training.html', title=f'тренировка {num}')
+
+
+@app.route('/books_and_texts', methods=['GET', 'POST'])
+@login_required
+def books_and_texts():
+    db_sess = db_session.create_session()
+    if request.method == 'POST':
+        return
+    books = db_sess.query(Book).all()
+    return render_template('books_and_texts.html', title='книги и тексты', books=books)
+
+
+@app.route('/words', methods=['GET', 'POST'])
+@login_required
+def words():
+
+    return render_template('words.html', title='мои слова')
+
+
+@app.route('/add_text', methods=['GET', 'POST'])
+@login_required
+def add_text():
+    form = TextForm()
+    if form.validate_on_submit():
+        if form.author.data and form.title.data and form.file.data and form.difficult.data:
+            db_sess = db_session.create_session()
+            max_id = db_sess.query(Book).order_by(Book.id).all()
+            if not max_id:
+                max_id = 1
+            else:
+                max_id = max_id[-1].id + 1
+            book = Book()
+            book.author = form.author.data
+            book.title = form.title.data
+            book.level_id = form.difficult.data
+            if allowed_file(form.file.data.filename):
+                f = request.files['file']
+                path = f"books\{max_id}.epub"
+                f.save(path)
+            book.pages = 1
+            book.user_author_id = current_user.id
+            db_sess.merge(current_user)
+            db_sess.add(book)
+            db_sess.commit()
+            return redirect("/books_and_texts")
+        return render_template('add_text.html',
+                               message="не все поля заполнены",
+                               form=form)
+    return render_template('add_text.html', title='добавление текста', form=form)
 
 
 def main():
