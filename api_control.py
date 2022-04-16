@@ -205,4 +205,4 @@ async def appendWord(user_id, word_id):
 
 if __name__ == '__main__':
     loop = asyncio.get_event_loop()
-    print(loop.run_until_complete(appendWord(1, 4)))
+    print(loop.run_until_complete())
