@@ -1,6 +1,11 @@
 from flask import Flask, render_template, redirect, request, make_response, jsonify
-from data import db_session, books_api, users_api, words_api
+from data import db_session, books_api, users_api, words_api, levels_api, word_levels_api
 from data.users import User
+from data.words import Word
+from data.word_levels import Word_level
+from data.levels import Level
+from data.questions import Question
+from data.books import Book
 from forms.login import LoginForm
 from forms.register import RegisterForm
 from flask_login import LoginManager, current_user, login_user, login_required, logout_user
@@ -78,6 +83,8 @@ def main():
     app.register_blueprint(books_api.blueprint)
     app.register_blueprint(users_api.blueprint)
     app.register_blueprint(words_api.blueprint)
+    app.register_blueprint(levels_api.blueprint)
+    app.register_blueprint(word_levels_api.blueprint)
     app.run(port=8080, host='127.0.0.1')
 
 
