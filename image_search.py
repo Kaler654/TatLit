@@ -32,7 +32,7 @@ def to_normal_words(html_str, delimitel):
 
 def translate_tat_to_rus(text):
     params = {
-        'lang': 0,
+        'lang': 1,
         'text': text
     }
     translated_text = requests.get(url, params=params).text.split('\n')
@@ -157,4 +157,21 @@ def search(name, dest='a.png'):
             download(download_link, dest=f'({i}) {dest}')
     else:
         raise ConnectionAbortedError(f"You got a status {response.status_code}")
+    
 
+def search_tatar(name, dest='a.png'):
+    text = translate_tat_to_eng(name)
+    search(text, dest)
+
+
+def search_rus(name, dest='a.png'):
+    text = translate_rus_to_eng(name)
+    search(text, dest)
+
+
+def search_eng(name, dest='a.png'):
+    search(name, dest)
+
+
+if __name__ == '__main__':
+    print(translate_tat_to_eng('ничек'))

@@ -3,11 +3,8 @@ import asyncio
 import datetime
 
 
-URL = "http://localhost:8080" 
-
-
 def prepare_url(path):
-    dest = URL + '/' + path
+    dest = "http://localhost:8080/" + path
     if dest.count('//') > 1:
         raise("Invalid URL")
     dest = dest[:-1] if dest.endswith('/') else dest
